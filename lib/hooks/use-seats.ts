@@ -105,22 +105,31 @@ export function useSeats(tripId: string, currentUserId?: string | null) {
     }
   }, [supabase, tripId, fetchSeatMapAndLayout])
 
+  // Garantiza que haya una sesión activa (anónima si es necesario)
+  const ensureSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    if (!session) {
+      console.log('[useSeats] No session — signing in anonymously...')
+      const { error } = await supabase.auth.signInAnonymously()
+      if (error) throw new Error('No se pudo establecer sesión. Intenta recargar la página.')
+    }
+  }
+
   // Reserva atómica de un asiento (RPC hold_seat)
   const holdSeat = useCallback(async (seatNumber: string) => {
     setError(null)
     try {
-      // Ejecutar la función RPC atómica en Postgres
-      // El RPC valida auth.uid() del lado del servidor.
+      // Garantizar sesión activa antes de llamar el RPC
+      await ensureSession()
+
       const { data, error: rpcError } = await supabase.rpc('hold_seat', {
         p_seat_number: seatNumber,
         p_trip_id: tripId,
       })
 
-      if (rpcError) {
-        throw rpcError
-      }
+      if (rpcError) throw rpcError
 
-      // Actualización optimista del estado local para feedback instantáneo
+      // Actualización optimista del estado local
       const { data: { session } } = await supabase.auth.getSession()
       setSeats((prev) => {
         const next = new Map(prev)
