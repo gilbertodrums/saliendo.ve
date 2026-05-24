@@ -34,9 +34,7 @@ export async function updateSession(request: NextRequest): Promise<{
         },
         setAll(cookiesToSet) {
           // Primero actualiza las cookies en la request
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           // Luego recrea la response con las cookies actualizadas
           supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -68,8 +66,6 @@ export async function updateSession(request: NextRequest): Promise<{
   return {
     response: supabaseResponse,
     user: appUser,
-    supabaseUser: supabaseUser
-      ? { id: supabaseUser.id, email: supabaseUser.email }
-      : null,
+    supabaseUser: supabaseUser ? { id: supabaseUser.id, email: supabaseUser.email } : null,
   }
 }

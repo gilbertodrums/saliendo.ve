@@ -56,9 +56,7 @@ const PUBLIC_PATHS: RegExp[] = [
  */
 function isInternalPath(pathname: string): boolean {
   return (
-    pathname.startsWith('/_next/') ||
-    pathname.startsWith('/api/') ||
-    pathname.includes('.') // archivos estáticos con extensión
+    pathname.startsWith('/_next/') || pathname.startsWith('/api/') || pathname.includes('.') // archivos estáticos con extensión
   )
 }
 
@@ -74,9 +72,7 @@ export async function middleware(request: NextRequest) {
   const { response, user } = await updateSession(request)
 
   // Verificar si la ruta requiere un rol específico
-  const protectedRoute = PROTECTED_ROUTES.find(({ pattern }) =>
-    pattern.test(pathname)
-  )
+  const protectedRoute = PROTECTED_ROUTES.find(({ pattern }) => pattern.test(pathname))
 
   if (protectedRoute) {
     // Sin usuario autenticado → redirigir a login

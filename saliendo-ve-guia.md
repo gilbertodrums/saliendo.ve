@@ -51,21 +51,21 @@ En Venezuela la compra de pasajes interurbanos sigue siendo mayormente presencia
 
 ## 2. Stack tecnológico
 
-| Capa | Elección | Razón corta |
-|---|---|---|
-| Frontend | Next.js 15 (App Router) + React + TypeScript | SSR/edge, ecosistema, type-safety |
-| Estilos | Tailwind CSS | Bundle pequeño, mobile-first nativo |
-| PWA | `next-pwa` + Workbox | Service worker, install prompt, offline |
-| Backend + DB | Supabase (Postgres) | Auth, RLS, Realtime y Storage en un solo servicio |
-| Estado servidor | TanStack Query | Cache, reintentos, optimistic updates |
-| Estado UI | Zustand | Ligero, sin boilerplate |
-| Animaciones | Framer Motion + CSS transitions | Transiciones fluidas, gestos |
-| QR generación | `qrcode` | Genera SVG/PNG en cliente |
-| QR escaneo | `@zxing/browser` o `html5-qrcode` | Lectura desde cámara web |
-| Almacenamiento local | `idb-keyval` (IndexedDB) | Persistir flujo de compra y caché de chofer |
-| Hosting | Vercel | Edge functions, deploy gratis, baja latencia |
-| Tipografías | Plus Jakarta Sans + Inter (Google Fonts) | Display y cuerpo |
-| Íconos | Lucide React | Set consistente, tree-shakeable |
+| Capa                 | Elección                                     | Razón corta                                       |
+| -------------------- | -------------------------------------------- | ------------------------------------------------- |
+| Frontend             | Next.js 15 (App Router) + React + TypeScript | SSR/edge, ecosistema, type-safety                 |
+| Estilos              | Tailwind CSS                                 | Bundle pequeño, mobile-first nativo               |
+| PWA                  | `next-pwa` + Workbox                         | Service worker, install prompt, offline           |
+| Backend + DB         | Supabase (Postgres)                          | Auth, RLS, Realtime y Storage en un solo servicio |
+| Estado servidor      | TanStack Query                               | Cache, reintentos, optimistic updates             |
+| Estado UI            | Zustand                                      | Ligero, sin boilerplate                           |
+| Animaciones          | Framer Motion + CSS transitions              | Transiciones fluidas, gestos                      |
+| QR generación        | `qrcode`                                     | Genera SVG/PNG en cliente                         |
+| QR escaneo           | `@zxing/browser` o `html5-qrcode`            | Lectura desde cámara web                          |
+| Almacenamiento local | `idb-keyval` (IndexedDB)                     | Persistir flujo de compra y caché de chofer       |
+| Hosting              | Vercel                                       | Edge functions, deploy gratis, baja latencia      |
+| Tipografías          | Plus Jakarta Sans + Inter (Google Fonts)     | Display y cuerpo                                  |
+| Íconos               | Lucide React                                 | Set consistente, tree-shakeable                   |
 
 **Plan de costos para la demo:** Vercel Hobby + Supabase Free. Cero dólares mientras estemos en prototipo.
 
@@ -75,19 +75,19 @@ En Venezuela la compra de pasajes interurbanos sigue siendo mayormente presencia
 
 ### 3.1 Paleta de colores
 
-| Token | HEX | Uso |
-|---|---|---|
+| Token             | HEX       | Uso                                                                                  |
+| ----------------- | --------- | ------------------------------------------------------------------------------------ |
 | `--color-primary` | `#1A3CFF` | Azul zafiro profundo. CTAs principales, headers, links activos, asiento seleccionado |
-| `--color-accent` | `#FF6B2B` | Naranja vibrante. Acentos, badges de promoción, estado "held", botón "Comprar" |
-| `--color-white` | `#FFFFFF` | Fondo principal |
-| `--color-ink-900` | `#0A1330` | Texto principal (no negro puro: deriva del azul) |
-| `--color-ink-600` | `#4A5578` | Texto secundario |
-| `--color-ink-400` | `#9AA3BD` | Texto deshabilitado, placeholders |
-| `--color-line` | `#E6E9F2` | Bordes, divisores |
-| `--color-bg-soft` | `#F5F7FB` | Fondos de secciones, cards en reposo |
-| `--color-success` | `#16A34A` | Asiento disponible, ticket válido |
-| `--color-danger` | `#DC2626` | Errores, ticket inválido, asiento bloqueado |
-| `--color-warning` | `#F59E0B` | Avisos, tiempo de hold por expirar |
+| `--color-accent`  | `#FF6B2B` | Naranja vibrante. Acentos, badges de promoción, estado "held", botón "Comprar"       |
+| `--color-white`   | `#FFFFFF` | Fondo principal                                                                      |
+| `--color-ink-900` | `#0A1330` | Texto principal (no negro puro: deriva del azul)                                     |
+| `--color-ink-600` | `#4A5578` | Texto secundario                                                                     |
+| `--color-ink-400` | `#9AA3BD` | Texto deshabilitado, placeholders                                                    |
+| `--color-line`    | `#E6E9F2` | Bordes, divisores                                                                    |
+| `--color-bg-soft` | `#F5F7FB` | Fondos de secciones, cards en reposo                                                 |
+| `--color-success` | `#16A34A` | Asiento disponible, ticket válido                                                    |
+| `--color-danger`  | `#DC2626` | Errores, ticket inválido, asiento bloqueado                                          |
+| `--color-warning` | `#F59E0B` | Avisos, tiempo de hold por expirar                                                   |
 
 **Gradiente de marca** (úsalo en hero y pantallas de éxito):
 `linear-gradient(135deg, #1A3CFF 0%, #4B6CFF 50%, #FF6B2B 130%)`
@@ -110,15 +110,15 @@ Carga vía `next/font` con `display: swap` y `subset: ['latin']`. **Solo los pes
 
 **Escala tipográfica mobile (rem, root = 16px):**
 
-| Token | Tamaño | Line-height | Uso |
-|---|---|---|---|
-| `text-display` | 32px / 2rem | 1.1 | Hero, pantallas de éxito |
-| `text-h1` | 24px / 1.5rem | 1.2 | Título de pantalla |
-| `text-h2` | 20px / 1.25rem | 1.3 | Secciones |
-| `text-h3` | 18px / 1.125rem | 1.35 | Cards |
-| `text-body` | 16px / 1rem | 1.5 | Cuerpo por defecto |
-| `text-body-sm` | 14px / 0.875rem | 1.5 | Detalles, labels |
-| `text-caption` | 12px / 0.75rem | 1.4 | Microtexto, timestamps |
+| Token          | Tamaño          | Line-height | Uso                      |
+| -------------- | --------------- | ----------- | ------------------------ |
+| `text-display` | 32px / 2rem     | 1.1         | Hero, pantallas de éxito |
+| `text-h1`      | 24px / 1.5rem   | 1.2         | Título de pantalla       |
+| `text-h2`      | 20px / 1.25rem  | 1.3         | Secciones                |
+| `text-h3`      | 18px / 1.125rem | 1.35        | Cards                    |
+| `text-body`    | 16px / 1rem     | 1.5         | Cuerpo por defecto       |
+| `text-body-sm` | 14px / 0.875rem | 1.5         | Detalles, labels         |
+| `text-caption` | 12px / 0.75rem  | 1.4         | Microtexto, timestamps   |
 
 **Reglas:**
 
@@ -194,12 +194,12 @@ Esta es la sección más importante. Cada decisión aquí busca que el usuario s
 
 Implementadas con **Framer Motion** y la View Transitions API donde esté disponible.
 
-| Transición | Cuándo | Duración | Curva |
-|---|---|---|---|
-| Slide horizontal | Avanzar/retroceder en flujo | 280ms | `cubic-bezier(0.32, 0.72, 0, 1)` (iOS-like) |
-| Fade + scale leve | Abrir bottom sheet | 320ms | `spring(stiffness: 300, damping: 30)` |
-| Shared element | Card de viaje → detalle | 400ms | `spring` |
-| Crossfade | Cambio de tab | 180ms | `ease-out` |
+| Transición        | Cuándo                      | Duración | Curva                                       |
+| ----------------- | --------------------------- | -------- | ------------------------------------------- |
+| Slide horizontal  | Avanzar/retroceder en flujo | 280ms    | `cubic-bezier(0.32, 0.72, 0, 1)` (iOS-like) |
+| Fade + scale leve | Abrir bottom sheet          | 320ms    | `spring(stiffness: 300, damping: 30)`       |
+| Shared element    | Card de viaje → detalle     | 400ms    | `spring`                                    |
+| Crossfade         | Cambio de tab               | 180ms    | `ease-out`                                  |
 
 **Regla:** ninguna transición pasa de 400ms. Más que eso se siente lento.
 
@@ -323,6 +323,7 @@ Al completar el flujo (datos + mock pago), llamar `confirm_ticket(trip_id, seat_
 ### 6.4 Liberación de holds expirados
 
 Cron job en Supabase (`pg_cron`) cada 60 segundos:
+
 ```
 UPDATE seats_status SET status='available', held_by=NULL, held_until=NULL
 WHERE status='held' AND held_until < now()
@@ -357,6 +358,7 @@ Cada intento de `confirm_ticket` lleva un UUID generado en cliente y persistido 
 ### 7.4 Reintentos automáticos
 
 TanStack Query configurado con:
+
 - `retry: 3`
 - `retryDelay: exponential backoff (1s, 2s, 4s)`
 - `networkMode: 'offlineFirst'` donde aplique.
@@ -437,13 +439,13 @@ Las sesiones se persisten con refresh tokens largos (Supabase los maneja). La PW
 
 ### 10.1 Presupuestos
 
-| Métrica | Objetivo |
-|---|---|
-| JS inicial (gzipped) | < 150KB |
-| LCP en 3G simulada | < 2.5s |
-| TTI en 3G simulada | < 4s |
-| CLS | < 0.05 |
-| INP | < 200ms |
+| Métrica              | Objetivo |
+| -------------------- | -------- |
+| JS inicial (gzipped) | < 150KB  |
+| LCP en 3G simulada   | < 2.5s   |
+| TTI en 3G simulada   | < 4s     |
+| CLS                  | < 0.05   |
+| INP                  | < 200ms  |
 
 ### 10.2 Técnicas
 
@@ -587,29 +589,29 @@ saliendo-ve/
 
 ## 13. Decisiones documentadas (para que el equipo entienda el porqué)
 
-| Decisión | Alternativa descartada | Razón |
-|---|---|---|
-| Supabase sobre backend custom | Express + Postgres propio | Auth, realtime, RLS y storage gratis. Cero plomería. |
-| Next.js sobre Vite + React | Vite SPA | SSR para SEO de rutas, edge functions cerca del usuario, mejor LCP. |
-| PWA sobre app nativa (Expo/Flutter) | App nativa | Una sola codebase, instalable, suficiente para la sensación nativa. |
-| Tailwind sobre styled-components | CSS-in-JS | Bundle menor, mejor DX con LLMs, mobile-first nativo. |
-| TanStack Query sobre SWR | SWR | Mejor manejo de mutations e idempotency. |
-| `@zxing/browser` sobre BarcodeDetector API | API nativa | Soporte cross-browser, más estable en Android viejos. |
-| Hold de 10 min sobre 5 min | 5 min | VE tiene redes lentas. Margen necesario. |
+| Decisión                                   | Alternativa descartada    | Razón                                                               |
+| ------------------------------------------ | ------------------------- | ------------------------------------------------------------------- |
+| Supabase sobre backend custom              | Express + Postgres propio | Auth, realtime, RLS y storage gratis. Cero plomería.                |
+| Next.js sobre Vite + React                 | Vite SPA                  | SSR para SEO de rutas, edge functions cerca del usuario, mejor LCP. |
+| PWA sobre app nativa (Expo/Flutter)        | App nativa                | Una sola codebase, instalable, suficiente para la sensación nativa. |
+| Tailwind sobre styled-components           | CSS-in-JS                 | Bundle menor, mejor DX con LLMs, mobile-first nativo.               |
+| TanStack Query sobre SWR                   | SWR                       | Mejor manejo de mutations e idempotency.                            |
+| `@zxing/browser` sobre BarcodeDetector API | API nativa                | Soporte cross-browser, más estable en Android viejos.               |
+| Hold de 10 min sobre 5 min                 | 5 min                     | VE tiene redes lentas. Margen necesario.                            |
 
 ---
 
 ## 14. Riesgos conocidos y mitigaciones
 
-| Riesgo | Mitigación |
-|---|---|
-| Doble venta por race condition | UPDATE atómico con cláusula `WHERE status='available'` |
-| Doble cobro por reintento | Idempotency keys en `confirm_ticket` |
-| Pérdida de datos por corte de luz | Persistencia IndexedDB del flujo |
-| Chofer sin internet en ruta | Manifiesto descargado, validación local |
-| Hold expirado mientras paga | Avisos de timer + auto-recovery si vuelve a tiempo |
-| QR copiado/fotografiado | qr_token único + status `boarded` después de escanear (no se puede reusar) |
-| Bundle pesado en Android viejo | Presupuestos estrictos, dynamic imports, no UI libs pesadas |
+| Riesgo                            | Mitigación                                                                 |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| Doble venta por race condition    | UPDATE atómico con cláusula `WHERE status='available'`                     |
+| Doble cobro por reintento         | Idempotency keys en `confirm_ticket`                                       |
+| Pérdida de datos por corte de luz | Persistencia IndexedDB del flujo                                           |
+| Chofer sin internet en ruta       | Manifiesto descargado, validación local                                    |
+| Hold expirado mientras paga       | Avisos de timer + auto-recovery si vuelve a tiempo                         |
+| QR copiado/fotografiado           | qr_token único + status `boarded` después de escanear (no se puede reusar) |
+| Bundle pesado en Android viejo    | Presupuestos estrictos, dynamic imports, no UI libs pesadas                |
 
 ---
 
