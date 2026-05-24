@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { 
@@ -26,7 +27,7 @@ import { useCheckout } from '@/lib/store/use-checkout'
 import { useToast } from '@/components/ui/toast'
 import type { TripWithOperator } from '@/types/database'
 
-export default function BuscarViajes() {
+function BuscarViajesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
@@ -592,5 +593,20 @@ export default function BuscarViajes() {
         </div>
       </BottomSheet>
     </div>
+  )
+}
+
+export default function BuscarViajes() {
+  return (
+    <Suspense fallback={
+      <div className="bg-surface min-h-screen flex items-center justify-center p-8 text-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <span className="text-body-sm font-semibold text-ink-600">Cargando salidas disponibles...</span>
+        </div>
+      </div>
+    }>
+      <BuscarViajesContent />
+    </Suspense>
   )
 }
