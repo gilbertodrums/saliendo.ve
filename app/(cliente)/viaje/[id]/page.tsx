@@ -94,13 +94,6 @@ export default function SeatSelectorPage() {
 
   // Liberar el asiento seleccionado antes de desmontar o cambiar de asiento
   const handleSeatClick = async (seatNumber: string, status: string, isMine: boolean) => {
-    if (!user) {
-      toast('Debes iniciar sesión para reservar un asiento.', 'warning')
-      // Redirigir a checkout pasajero para que haga login
-      router.push('/checkout/pasajero')
-      return
-    }
-
     if (status === 'sold' || status === 'blocked') {
       toast('Este asiento ya está vendido o no disponible.', 'warning')
       return

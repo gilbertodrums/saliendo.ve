@@ -27,7 +27,8 @@ export default function CheckoutPasajeroPage() {
   const { 
     user, 
     profile, 
-    loading: authLoading, 
+    loading: authLoading,
+    isAnonymous,
     signInWithOtp, 
     verifyOtp, 
     upsertProfile 
@@ -45,16 +46,24 @@ export default function CheckoutPasajeroPage() {
   const [otpToken, setOtpToken] = React.useState('')
   const [verifyingOtp, setVerifyingOtp] = React.useState(false)
 
+  // Guard: esperar a que el componente se monte en cliente antes de validar el store
+  const [isMounted, setIsMounted] = React.useState(false)
+  React.useEffect(() => { setIsMounted(true) }, [])
+
   // Timer local para la barra de hold
   const [secondsLeft, setSecondsLeft] = React.useState<number | null>(null)
 
   // Redirigir a home si no hay viaje o asiento seleccionados
+  // IMPORTANTE: esperar a que el componente se monte para no redirigir antes
+  // de que Zustand hidrate el estado desde IndexedDB.
   React.useEffect(() => {
+    if (!isMounted) return // todavía no se ha montado en cliente
+    if (authLoading) return // esperar a que la sesión anon arrange
     if (!tripId || !selectedSeat) {
       toast('Por favor, selecciona un viaje y asiento primero.', 'warning')
       router.push('/')
     }
-  }, [tripId, selectedSeat, router])
+  }, [isMounted, authLoading, tripId, selectedSeat, router])
 
   // Prefill si hay datos previos en Zustand o en el perfil autenticado
   React.useEffect(() => {
@@ -156,12 +165,13 @@ export default function CheckoutPasajeroPage() {
     const verifyRes = await verifyOtp(email.trim(), otpToken.trim())
 
     if (verifyRes.success) {
-      // 3. Crear / actualizar perfil en Supabase
+      // 3. Crear / actualizar perfil en Supabase (pasar email para usuarios anónimos recién vinculados)
       const fullIdNumber = `${idType}-${idDigits.trim()}`
       const upsertRes = await upsertProfile({
         full_name: fullName.trim(),
         id_number: fullIdNumber,
         phone: phone.trim(),
+        email: email.trim(),
       })
 
       if (upsertRes.success) {
@@ -278,9 +288,10 @@ export default function CheckoutPasajeroPage() {
 
         {/* FORM CONTAINER */}
         <div className="bg-white border border-line rounded-[24px] p-5 mt-5 shadow-sm">
-          {!user ? (
+          {/* Usuario anónimo o no autenticado: mostrar flujo guest con OTP inline */}
+          {(!user || isAnonymous) ? (
             /* ============================================================
-               FLUJO: USUARIO NO AUTENTICADO (OTP INLINE INTEGRADO)
+               FLUJO: INVITADO / USUARIO ANÓNIMO (OTP INLINE INTEGRADO)
                ============================================================ */
             <div className="space-y-5">
               <div className="bg-primary/5 border border-primary/10 rounded-[14px] p-3.5 flex gap-3 text-primary">

@@ -10,10 +10,11 @@ export interface AuthContextType {
   profile: DbUser | null
   loading: boolean
   error: string | null
+  isAnonymous: boolean
   signInWithOtp: (email: string) => Promise<{ success: boolean; error?: any }>
   verifyOtp: (email: string, token: string) => Promise<{ success: boolean; session: any; error?: any } | { success: boolean; session?: null; error: any }>
   signOut: () => Promise<void>
-  upsertProfile: (profileData: { full_name: string; phone?: string; id_number?: string }) => Promise<{ success: boolean; data?: DbUser; error?: any }>
+  upsertProfile: (profileData: { full_name: string; phone?: string; id_number?: string; email?: string }) => Promise<{ success: boolean; data?: DbUser; error?: any }>
   clearError: () => void
 }
 
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<DbUser | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isAnonymous, setIsAnonymous] = useState(false)
 
   const supabase = createClient()
 
@@ -81,8 +83,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (sessionError) throw sessionError
 
         if (session?.user) {
-          if (isMounted) setUser(session.user)
-          await fetchProfile(session.user.id)
+          if (isMounted) {
+            setUser(session.user)
+            // Detectar si la sesión activa es anónima
+            const anonFlag = session.user.is_anonymous === true
+            setIsAnonymous(anonFlag)
+          }
+          if (!session.user.is_anonymous) {
+            await fetchProfile(session.user.id)
+          }
+        } else {
+          // Sin sesión: crear sesión anónima para que el RPC hold_seat tenga auth.uid()
+          console.log('[Auth] No session found — signing in anonymously...')
+          const { data: anonData, error: anonError } = await supabase.auth.signInAnonymously()
+          if (anonError) {
+            console.error('[Auth] Anonymous sign-in failed:', anonError)
+          } else if (anonData.user && isMounted) {
+            setUser(anonData.user)
+            setIsAnonymous(true)
+            console.log('[Auth] Anonymous session created:', anonData.user.id)
+          }
         }
       } catch (err: any) {
         console.error('Error initializing authentication:', err)
@@ -100,10 +120,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(true)
       if (session?.user) {
         setUser(session.user)
-        await fetchProfile(session.user.id)
+        const anonFlag = session.user.is_anonymous === true
+        setIsAnonymous(anonFlag)
+        // Solo cargar perfil para usuarios con email verificado
+        if (!anonFlag) {
+          await fetchProfile(session.user.id)
+        }
       } else {
         setUser(null)
         setProfile(null)
+        setIsAnonymous(false)
       }
       setLoading(false)
     })
@@ -186,9 +212,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     full_name: string
     phone?: string
     id_number?: string
+    email?: string // opcional: requerido para usuarios anónimos recien vinculados
   }) => {
     if (!user) {
       const err = new Error('Usuario no autenticado para crear perfil')
+      setError(err.message)
+      return { success: false, error: err }
+    }
+
+    // Resolver email: para usuarios anónimos recien verificados por OTP,
+    // el email puede llegar como parámetro adicional
+    const resolvedEmail = user.email || profileData.email
+    if (!resolvedEmail) {
+      const err = new Error('No se pudo determinar el email del usuario')
       setError(err.message)
       return { success: false, error: err }
     }
@@ -200,11 +236,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from('users')
         .upsert({
           id: user.id,
-          email: user.email!,
+          email: resolvedEmail,
           full_name: profileData.full_name,
           phone: profileData.phone || null,
           id_number: profileData.id_number || null,
-          role: 'customer', // Por defecto los que entran por OTP son clientes
+          role: 'customer',
           is_active: true,
           updated_at: new Date().toISOString(),
         })
@@ -228,6 +264,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profile,
     loading,
     error,
+    isAnonymous,
     signInWithOtp,
     verifyOtp,
     signOut,
