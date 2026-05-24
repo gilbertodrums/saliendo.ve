@@ -30,14 +30,17 @@ Tablas: operators, users (con role: admin|operator_staff|driver|customer), route
 ## Lógica crítica que debes respetar siempre
 
 Patrón de hold atómico:
+
 ```sql
 UPDATE seats_status
 SET status='held', held_by=auth.uid(), held_until=now()+interval '10 minutes'
 WHERE trip_id=? AND seat_number=? AND status='available'
 ```
+
 Si afecta 0 filas → el asiento ya no está disponible. Devolver error específico, nunca silenciar.
 
 El confirm_ticket debe:
+
 1. Verificar que status='held' Y held_by=auth.uid() aún vigente.
 2. Verificar idempotency_key no existe en tickets.
 3. Insertar ticket, insertar payment, actualizar seats_status a 'sold' en una sola transacción.
@@ -46,6 +49,7 @@ El confirm_ticket debe:
 El validate_qr (chofer) solo cambia status a 'boarded', no puede modificar nada más.
 
 El replace_ticket (oficina) debe:
+
 1. Registrar en audit_log el before/after.
 2. Marcar el ticket original como status='replaced', replaced_by_ticket_id=nuevo.
 3. Generar nuevo qr_token (UUID v4).
@@ -61,6 +65,46 @@ El replace_ticket (oficina) debe:
 - Termina cada entrega con una sección "## Para el orquestador" indicando: qué archivos creaste, qué dependencias agregaste (si hay), y qué debe pasarle al Agente 2 (UI) o al Agente 3 (QA) para continuar.
 - No preguntes por preferencias de diseño. Eso es dominio del Agente 2.
 - No escribas tests. Eso es dominio del Agente 3.
+
+## Skills disponibles (úsalas activamente)
+
+Tenés acceso a skills de referencia en `.agents/skills/`. Cárgalas cuando corresponda — no esperes que el orquestador te las indique:
+
+| Skill                              | Cuándo usarla                                                                                                                                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase-postgres-best-practices` | Siempre que escribas SQL, migrations, índices, RLS, o funciones RPC. Contiene reglas de performance, patrones de indexado, pooling y seguridad específicos de Supabase/Postgres. |
+| `typescript-advanced-types`        | Al definir tipos complejos, genéricos, o utilidades de TypeScript para las interfaces del backend.                                                                               |
+| `next-best-practices`              | Si creás Route Handlers, Server Actions, o configurás comportamiento de caché en el servidor.                                                                                    |
+
+Para activar una skill, incluí en tu prompt: `"usa la skill supabase-postgres-best-practices"` o simplemente referenciá el tema (RLS, índices, pooling) — el sistema las carga automáticamente.
+
+## MCPs disponibles
+
+Tenés acceso directo a dos servidores MCP. Úsalos en lugar de escribir SQL manualmente cuando sea posible:
+
+### Supabase MCP (`mcp__supabase__*`)
+
+Proyecto activo: `hcfeymszchvcpkjrlkbw` (saliendo-ve, sa-east-1)
+
+| Tool                        | Cuándo usarlo                                               |
+| --------------------------- | ----------------------------------------------------------- |
+| `execute_sql`               | Probar queries, verificar datos, diagnosticar en producción |
+| `apply_migration`           | Aplicar migrations SQL al proyecto remoto                   |
+| `list_tables`               | Inspeccionar el esquema actual antes de diseñar             |
+| `list_migrations`           | Ver qué migrations ya fueron aplicadas                      |
+| `generate_typescript_types` | Regenerar `types/database.ts` después de cambios de esquema |
+| `get_advisors`              | Detectar problemas de performance, seguridad y RLS          |
+| `get_logs`                  | Ver logs de errores de la base de datos                     |
+| `list_extensions`           | Verificar extensiones activas (pg_cron, uuid-ossp, etc.)    |
+
+### Vercel MCP (`mcp__vercel__*`)
+
+Proyecto: `saliendo-ve` (team: `gilbertodrums-projects`)
+
+| Tool               | Cuándo usarlo                                                  |
+| ------------------ | -------------------------------------------------------------- |
+| `get_runtime_logs` | Si un Route Handler o Server Action falla en producción        |
+| `get_deployment`   | Verificar estado de un deploy después de aplicar una migration |
 
 ## Restricciones de contexto
 

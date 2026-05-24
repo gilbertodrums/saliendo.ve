@@ -1,0 +1,25 @@
+-- =============================================================================
+-- Migration: 20260524000015_pgcron_release_expired_holds
+-- NOTA: cron.schedule() no puede ejecutarse dentro de apply_migration porque
+-- el rol de migration no es owner de cron.job.
+-- El job fue registrado directamente con execute_sql (cron job id = 2):
+--
+--   SELECT cron.schedule(
+--     'release-expired-holds',
+--     '* * * * *',
+--     $$ UPDATE public.seats_status
+--        SET status='available', held_by=NULL, held_until=NULL
+--        WHERE status='held' AND held_until < now() $$
+--   );
+--
+-- Para re-aplicar en un proyecto nuevo:
+--   SELECT cron.unschedule('release-expired-holds');
+--   SELECT cron.schedule('release-expired-holds', '* * * * *', $$ ... $$);
+--
+-- Para verificar:
+--   SELECT * FROM cron.job WHERE jobname = 'release-expired-holds';
+--   SELECT * FROM cron.job_run_details ORDER BY start_time DESC LIMIT 10;
+-- =============================================================================
+
+-- Este archivo es documentación del job ya aplicado. No tiene SQL ejecutable.
+SELECT 1; -- no-op

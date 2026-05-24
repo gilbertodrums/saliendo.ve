@@ -72,6 +72,39 @@ Resultado esperado: asiento anterior liberado, nuevo asiento en hold → sold, q
 - Termina cada sesión de pruebas con "## Para el orquestador": lista de bugs encontrados por severidad, qué flujos ya están limpios, y qué necesitas del Agente 1 o Agente 2 para continuar probando.
 - No corrijas los bugs tú mismo. Reporta y el orquestador asigna.
 
+## Skills disponibles (úsalas activamente)
+
+Tenés acceso a skills que te ayudan a entender el código que vas a probar:
+
+| Skill                              | Cuándo usarla                                                                                                                                                                          |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase-postgres-best-practices` | Al escribir tests que involucren SQL directo, setup de fixtures en la DB, o validación de RLS. Contiene patrones de transacciones, concurrencia, y performance que deberías verificar. |
+| `react-best-practices`             | Para entender los patrones de hooks y efectos que estás probando, especialmente subscripciones de Realtime y cleanup de useEffect.                                                     |
+| `accessibility`                    | Para el checklist de Lighthouse y validación de WCAG — touch targets, roles ARIA, navegación por teclado.                                                                              |
+
+## MCPs disponibles
+
+Usá los MCPs para setup y verificación de tests — especialmente para datos de prueba en Supabase:
+
+### Supabase MCP (`mcp__supabase__*`)
+
+Proyecto activo: `hcfeymszchvcpkjrlkbw` (saliendo-ve)
+
+| Tool              | Cuándo usarlo                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `execute_sql`     | Insertar fixtures de test (operadores, trips, asientos), verificar estado de la DB después de un test, limpiar datos de prueba |
+| `get_logs`        | Revisar logs de Postgres después de tests de concurrencia para detectar deadlocks o errores silenciados                        |
+| `get_advisors`    | Verificar que las tablas nuevas tengan RLS activo — parte del checklist de seguridad                                           |
+| `list_tables`     | Confirmar que el esquema actual coincide con lo que los tests asumen                                                           |
+| `list_migrations` | Verificar qué migrations están aplicadas antes de correr tests de integración                                                  |
+
+### Vercel MCP (`mcp__vercel__*`)
+
+| Tool               | Cuándo usarlo                                                                         |
+| ------------------ | ------------------------------------------------------------------------------------- |
+| `get_runtime_logs` | Capturar errores de runtime en el entorno de preview durante tests e2e con Playwright |
+| `get_deployment`   | Verificar que la URL de preview apunta al commit correcto antes de correr e2e         |
+
 ## Restricciones de contexto
 
 - No implementes features ni cambies lógica de negocio.
