@@ -1,24 +1,6 @@
 -- =============================================================================
 -- Migration: 20260524000019_enable_anonymous_auth
 -- Permite compra de boletos sin registro previo (flujo guest / invitado).
---
--- Estrategia:
---   1. El FK seats_status.held_by ya referencia auth.users(id) — esto está OK
---      porque los usuarios anónimos de Supabase SÍ tienen fila en auth.users.
---
---   2. El trigger handle_new_user en public.users solo se dispara para usuarios
---      que tienen email. Los usuarios anónimos NO tienen email, por lo que
---      NO se crea fila en public.users — lo cual es intencional.
---
---   3. La función hold_seat es SECURITY DEFINER, por lo que puede escribir
---      en seats_status con auth.uid() de cualquier usuario, incluyendo anónimos.
---
---   4. Necesitamos que el hold_seat funcione aunque el usuario anónimo NO
---      tenga fila en public.users. Actualizamos la función para NO requerir
---      perfil en public.users.
---
---   5. Permitimos que anon (antes de signInAnonymously, solo el cliente real)
---      y authenticated (incluye anónimos) puedan ejecutar hold_seat.
 -- =============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -32,9 +14,9 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 BEGIN
-  -- Solo crear perfil en public.users si el usuario tiene email
-  -- Los usuarios anónimos (is_anonymous=true) NO tienen email
-  -- y NO deben tener fila en public.users hasta que vinculen su cuenta.
+  -- Solo crear perfil en public.users si el usuario tiene email.
+  -- Los usuarios anónimos NO tienen email y no deben tener fila en public.users
+  -- hasta que vinculen su cuenta via OTP.
   IF NEW.email IS NOT NULL AND NEW.email != '' THEN
     INSERT INTO public.users (id, email, full_name, role)
     VALUES (
@@ -50,12 +32,12 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.handle_new_user() IS
-  'Crea fila en public.users al registrarse un nuevo usuario en auth.users con email. Los usuarios anónimos (is_anonymous=true) se omiten hasta que vinculen un email.';
+  'Crea fila en public.users al registrarse un usuario con email. Los anónimos se omiten hasta vincular email.';
 
 -- ---------------------------------------------------------------------------
--- 2. Actualizar hold_seat para NO verificar existencia en public.users
---    Los usuarios anónimos tienen auth.uid() válido en auth.users pero
---    no necesariamente en public.users.
+-- 2. DROP + recrear hold_seat con soporte de usuarios anónimos
+--    (la versión anterior de migration 018 ya tiene return type timestamptz,
+--     así que solo necesitamos CREATE OR REPLACE)
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.hold_seat(
   p_trip_id     uuid,
@@ -87,7 +69,7 @@ BEGIN
       USING HINT = 'El viaje no existe o no acepta reservas';
   END IF;
 
-  -- Proactivamente liberar el hold para este asiento específico si ya expiró.
+  -- Proactivamente liberar el hold para este asiento si ya expiró
   UPDATE public.seats_status
   SET
     status     = 'available',
@@ -129,25 +111,29 @@ END;
 $$;
 
 COMMENT ON FUNCTION public.hold_seat(uuid, text) IS
-  'Reserva atómica de asiento por 10 minutos. Acepta usuarios anónimos (is_anonymous=true). Libera proactivamente holds expirados.';
+  'Reserva atómica de asiento por 10 minutos. Acepta usuarios anónimos. Libera proactivamente holds expirados.';
 
--- Permitir que usuarios autenticados (incluyendo anónimos) ejecuten hold_seat
+-- Garantizar acceso para usuarios autenticados (incluye anónimos de Supabase)
 GRANT EXECUTE ON FUNCTION public.hold_seat(uuid, text) TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 3. Actualizar release_seat de forma similar
+-- 3. DROP + recrear release_seat manteniendo return type boolean
+--    (original retorna boolean, NO void — hay que mantenerlo consistente)
 -- ---------------------------------------------------------------------------
-CREATE OR REPLACE FUNCTION public.release_seat(
+DROP FUNCTION IF EXISTS public.release_seat(uuid, text);
+
+CREATE FUNCTION public.release_seat(
   p_trip_id     uuid,
   p_seat_number text
 )
-RETURNS void
+RETURNS boolean
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_user_id uuid;
+  v_rows_affected integer;
+  v_user_id       uuid;
 BEGIN
   v_user_id := auth.uid();
   IF v_user_id IS NULL THEN
@@ -162,12 +148,16 @@ BEGIN
     held_until = NULL
   WHERE trip_id     = p_trip_id
     AND seat_number = p_seat_number
-    AND held_by     = v_user_id
-    AND status      = 'held';
+    AND status      = 'held'
+    AND held_by     = v_user_id;
+
+  GET DIAGNOSTICS v_rows_affected = ROW_COUNT;
+  RETURN v_rows_affected > 0;
 END;
 $$;
 
 COMMENT ON FUNCTION public.release_seat(uuid, text) IS
-  'Libera el hold de un asiento por el usuario autenticado (incluyendo anónimos).';
+  'Libera el hold de un asiento. Acepta usuarios anónimos. Retorna true si se liberó.';
 
 GRANT EXECUTE ON FUNCTION public.release_seat(uuid, text) TO authenticated;
+

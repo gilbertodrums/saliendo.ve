@@ -109,23 +109,19 @@ export function useSeats(tripId: string, currentUserId?: string | null) {
   const holdSeat = useCallback(async (seatNumber: string) => {
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) {
-        throw new Error('Debes iniciar sesión para reservar un asiento.')
-      }
-
       // Ejecutar la función RPC atómica en Postgres
+      // El RPC valida auth.uid() del lado del servidor.
       const { data, error: rpcError } = await supabase.rpc('hold_seat', {
         p_seat_number: seatNumber,
         p_trip_id: tripId,
       })
 
       if (rpcError) {
-        // La función RPC lanza excepciones específicas si no está disponible
         throw rpcError
       }
 
       // Actualización optimista del estado local para feedback instantáneo
+      const { data: { session } } = await supabase.auth.getSession()
       setSeats((prev) => {
         const next = new Map(prev)
         const currentSeat = next.get(seatNumber)
@@ -133,7 +129,7 @@ export function useSeats(tripId: string, currentUserId?: string | null) {
           next.set(seatNumber, {
             ...currentSeat,
             status: 'held',
-            held_by: session.user.id,
+            held_by: session?.user?.id ?? null,
             held_until: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
           })
         }
@@ -153,11 +149,6 @@ export function useSeats(tripId: string, currentUserId?: string | null) {
   const releaseSeat = useCallback(async (seatNumber: string) => {
     setError(null)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.user) {
-        throw new Error('Debes iniciar sesión para liberar un asiento.')
-      }
-
       const { data, error: rpcError } = await supabase.rpc('release_seat', {
         p_seat_number: seatNumber,
         p_trip_id: tripId,
